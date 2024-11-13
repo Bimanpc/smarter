@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Samsung SmartTag Geolocator</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css" rel="stylesheet" />
+</head>
+<body>
+
+  <h1>Samsung SmartTag Geolocator</h1>
+
+  <!-- Map Display -->
+  <div id="map" style="width: 100%; height: 500px;"></div>
+
+  <!-- Location and Battery Info -->
+  <div id="info">
+    <p><strong>SmartTag Status:</strong> <span id="status">Unknown</span></p>
+    <p><strong>Battery Level:</strong> <span id="battery">N/A</span></p>
+    <button id="refresh">Refresh Location</button>
+  </div>
+
+  <script>
+    // Mapbox initialization
+    mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [0, 0], // Default center
+      zoom: 2
+    });
+
+    const marker = new mapboxgl.Marker().setLngLat([0, 0]).addTo(map);
+
+    // Function to update location from the backend API
+    async function updateLocation() {
+      try {
+        const response = await fetch('/api/getSmartTagLocation'); // Adjust endpoint as needed
+        const data = await response.json();
+
+        if (data.success) {
+          const { latitude, longitude, battery } = data;
+          document.getElementById('status').textContent = "Online";
+          document.getElementById('battery').textContent = battery + "%";
+
+          // Update map and marker
+          marker.setLngLat([longitude, latitude]);
+          map.flyTo({ center: [longitude, latitude], zoom: 15 });
+        } else {
+          document.getElementById('status').textContent = "Offline";
+        }
+      } catch (error) {
+        console.error("Error fetching location:", error);
+      }
+    }
+
+    // Button to manually refresh the location
+    document.getElementById('refresh').addEventListener('click', updateLocation);
+
+    // Initial location update
+    updateLocation();
+  </script>
+</body>
+</html>
